@@ -1,0 +1,12 @@
+name: zipper-example
+license: ISC
+
+dependencies:
+- base
+- containers
+- pretty-tree
+
+executables:
+  zipper:
+    main: Tree.hs
+    source-dirs: src

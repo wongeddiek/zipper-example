@@ -1,0 +1,7 @@
+resolver: lts-9.6
+
+packages:
+- '.'
+
+extra-deps:
+- pretty-tree-0.1.0.0
