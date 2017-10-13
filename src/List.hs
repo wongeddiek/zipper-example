@@ -134,19 +134,22 @@ modListy n a (xs, bs)
   | n < length bs  = modListy n a (backward (xs, bs))
 
 -- let's try this out
-numList :: Listy Int
-numList =
-  ([0, 0, 0, 0, 0], [])
+-- test with a list of 1 million elements, NOT EFFECIENT
+numListy :: Listy Int
+numListy = (replicate 1000000 0, [])
 
-numList' :: Listy Int
-numList' =
-  numList
-  & modListy 4 30
-  & modListy 3 50
-  & modListy 2 90
-  & modListy 3 60
-  & modListy 4 20
-  & resetListy
+numListy' :: Listy Int
+numListy' =
+  numListy
+  & modListy 999999 50
+  & modListy 999994 50
+  & modListy 999998 90
+  & modListy 999991 60
+  & modListy 999993 20
+  & modListy 999996 80
+
+newNumListy :: [Int]
+newNumListy = drop 999990 (toList numListy')
 
 -- what's the issue with the modListy function?  It's calling the length function in every call stack while traversing the list.  This is not efficient with a bigger list.
 
@@ -157,14 +160,18 @@ modListy' n a (xs, bs)
   | n == 0 = resetListy (modify2 a (xs, bs))
   | n > 0  = modListy' (n-1) a (forward (xs, bs))
 
-numList2 :: Listy Int
-numList2 =
-  numList
-  & modListy' 4 30
-  & modListy' 3 50
-  & modListy' 2 90
-  & modListy' 3 60
-  & modListy' 4 20
+numListy2 :: Listy Int
+numListy2 =
+  numListy
+  & modListy' 999999 50
+  & modListy' 999994 50
+  & modListy' 999998 90
+  & modListy' 999991 60
+  & modListy' 999993 20
+  & modListy' 999996 80
+
+newNumListy2 :: [Int]
+newNumListy2 = drop 999990 (toList numListy2)
 
 -- We are traversing through the list forward to index n, and then backward to index 0 every time we call modListy', it's more efficient than modListy, but we can do better.
 
@@ -175,7 +182,7 @@ type ListyIndex a = ([a],[a],Int)
 -- function that convert a Listy to a ListyIndex
 toListyIndex :: Listy a -> ListyIndex a
 toListyIndex (xs, []) = (xs, [], 0)
-toListyIndex (xs, bs) = (xs, bs, length bs - 1)
+toListyIndex (xs, bs) = (xs, bs, length bs)
 
 -- traversing forward in a ListyIndex
 forward' :: ListyIndex a -> ListyIndex a
@@ -211,20 +218,22 @@ modListyIndex n a (xs, bs, index)
 
 
 -- given the following listyIndex
-listyX :: ListyIndex Int
-listyX = (replicate 1000 0, [], 0)
+numListyIndex :: ListyIndex Int
+numListyIndex = (replicate 1000000 0, [], 0)
 
 -- update the listyIndex
-listyX' :: ListyIndex Int
-listyX' =
-  listyX
-  & modListyIndex 0 30
-  & modListyIndex 994 50
-  & modListyIndex 998 90
-  & modListyIndex 991 60
-  & modListyIndex 993 20
-  & modListyIndex 996 80
-  & resetListyIndex
+numListyIndex' :: ListyIndex Int
+numListyIndex' =
+  numListyIndex
+  & modListyIndex 999999 50
+  & modListyIndex 999994 50
+  & modListyIndex 999998 90
+  & modListyIndex 999991 60
+  & modListyIndex 999993 20
+  & modListyIndex 999996 80
+
+newNumListyIndex :: [Int]
+newNumListyIndex = drop 999990 (toList' numListyIndex')
 
 -- with an index signature in our ListyIndex, we don't have to reset the ListyIndex back to index 0 everytime we call modListyIndex, as the function can take in a ListyIndex at any index state.
 
