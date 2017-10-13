@@ -211,9 +211,11 @@ modListyIndex n a (xs, bs, index)
 
 
 -- given the following listyIndex
+listyX :: ListyIndex Int
 listyX = (replicate 1000 0, [], 0)
 
 -- update the listyIndex
+listyX' :: ListyIndex Int
 listyX' =
   listyX
   & modListyIndex 0 30
