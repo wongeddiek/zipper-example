@@ -107,7 +107,6 @@ flNumbers' =
 
 -- performance?
 
--- E. Wong:
 -- How can we use Listy without explicitly calling forward, backward, and modify?
 -- we can write a wrapper function that takes an index n, a value a, and a listy (at its default state - empty breadcrumb), forward the listy to the index n, and modify the value at index n
 
@@ -128,27 +127,67 @@ resetListy (xs, b:bs) = resetListy (b:xs, bs)
 resetListy (xs, bs)   = (xs, bs)
 
 -- now, let's create a function that takes modify the listy at index n
--- modListy n a ()
+modListy :: Int -> a -> Listy a -> Listy a
+modListy n a (xs, bs)
+  | n == length bs = modify2 a (xs, bs)
+  | n > length bs  = modListy n a (forward (xs, bs))
+  | n < length bs  = modListy n a (backward (xs, bs))
 
+-- let's try this out
+numList :: Listy Int
+numList =
+  ([0, 0, 0, 0, 0], [])
 
+numList' :: Listy Int
+numList' =
+  numList
+  & modListy 4 30
+  & modListy 3 50
+  & modListy 2 90
+  & modListy 3 60
+  & modListy 4 20
+  & resetListy
 
--- rewriting listy to add an index number after 2nd list
+-- what's the issue with the modListy function?  It's calling the length function in every call stack while traversing the list.  This is not efficient with a bigger list.
+
+-- alternatively, we can write a function that takes an index n, a value a, and ONLY a listy at index 0 state.  The function moves the listy forward n times, modifies the listy, and resets it back to index 0 state
+
+modListy' :: Int -> a -> Listy a -> Listy a
+modListy' n a (xs, bs)
+  | n == 0 = resetListy (modify2 a (xs, bs))
+  | n > 0  = modListy' (n-1) a (forward (xs, bs))
+
+numList2 :: Listy Int
+numList2 =
+  numList
+  & modListy' 4 30
+  & modListy' 3 50
+  & modListy' 2 90
+  & modListy' 3 60
+  & modListy' 4 20
+
+-- We are traversing through the list forward to index n, and then backward to index 0 every time we call modListy', it's more efficient than modListy, but we can do better.
+
+-- rewriting listy to add an index number after breadcrumb list
 -- listy index type
 type ListyIndex a = ([a],[a],Int)
 
+-- function that convert a Listy to a ListyIndex
 toListyIndex :: Listy a -> ListyIndex a
 toListyIndex (xs, []) = (xs, [], 0)
 toListyIndex (xs, bs) = (xs, bs, length bs - 1)
 
+-- traversing forward in a ListyIndex
 forward' :: ListyIndex a -> ListyIndex a
 forward' (x:xs, bs, n) = (xs, x:bs, n+1)
 forward' (xs  , bs, n) = (xs,   bs, n )
 
+-- traversing backward in a ListyIndex
 backward' :: ListyIndex a -> ListyIndex a
 backward' (xs, b:bs, n) = (b:xs, bs, n-1)
 backward' (xs, bs  , n) = (xs  , bs, n)
 
--- modify replaces the head of the breadcrumbs
+-- replace the head of the 'head' list
 modify' :: a -> ListyIndex a -> ListyIndex a
 modify' a (_:xs, bs, n) = (a:xs, bs, n)
 modify' _ (xs, bs  , n) = (xs, bs, n)
@@ -158,7 +197,12 @@ toList' :: ListyIndex a -> [a]
 toList' (xs, b:bs, n) = toList' (b:xs, bs, n-1)
 toList' (xs, [], n) = xs
 
--- warpper function to modify nth index of Listy
+-- reset ListyIndex to index 0 state
+resetListyIndex :: ListyIndex a -> ListyIndex a
+resetListyIndex (xs, b:bs, n) = resetListyIndex (b:xs, bs, n-1)
+resetListyIndex (xs, bs, n)   = (xs, bs, n)
+
+-- wrapper function to modify nth index of ListyIndex
 modifyN :: Int -> a -> ListyIndex a -> ListyIndex a
 modifyN n a (xs, bs, index)
   | n == index = modify' a (xs, bs, index)
@@ -179,5 +223,6 @@ listyX' =
   & modifyN 993 20
   & modifyN 996 80
 
+-- with an index signature in our ListyIndex, we don't have to reset the ListyIndex back to index 0 everytime we call modifyN, as the function can take in a ListyIndex at any index state.
 
 -- copy-on-write semantics
