@@ -203,11 +203,11 @@ resetListyIndex (xs, b:bs, n) = resetListyIndex (b:xs, bs, n-1)
 resetListyIndex (xs, bs, n)   = (xs, bs, n)
 
 -- wrapper function to modify nth index of ListyIndex
-modifyN :: Int -> a -> ListyIndex a -> ListyIndex a
-modifyN n a (xs, bs, index)
+modListyIndex :: Int -> a -> ListyIndex a -> ListyIndex a
+modListyIndex n a (xs, bs, index)
   | n == index = modify' a (xs, bs, index)
-  | n > index  = modifyN n a (forward' (xs, bs, index))
-  | n < index  = modifyN n a (backward' (xs, bs, index))
+  | n > index  = modListyIndex n a (forward' (xs, bs, index))
+  | n < index  = modListyIndex n a (backward' (xs, bs, index))
 
 
 -- given the following listyIndex
@@ -216,13 +216,14 @@ listyX = (replicate 1000 0, [], 0)
 -- update the listyIndex
 listyX' =
   listyX
-  & modifyN 0 30
-  & modifyN 994 50
-  & modifyN 998 90
-  & modifyN 991 60
-  & modifyN 993 20
-  & modifyN 996 80
+  & modListyIndex 0 30
+  & modListyIndex 994 50
+  & modListyIndex 998 90
+  & modListyIndex 991 60
+  & modListyIndex 993 20
+  & modListyIndex 996 80
+  & resetListyIndex
 
--- with an index signature in our ListyIndex, we don't have to reset the ListyIndex back to index 0 everytime we call modifyN, as the function can take in a ListyIndex at any index state.
+-- with an index signature in our ListyIndex, we don't have to reset the ListyIndex back to index 0 everytime we call modListyIndex, as the function can take in a ListyIndex at any index state.
 
 -- copy-on-write semantics
